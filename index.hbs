@@ -1,0 +1,63 @@
+{{!--
+    index.hbs — Post archive (all posts, paginated).
+    Fallback template when no custom home page is set.
+    Uses the standard Ghost {{posts}} collection with {{pagination}}.
+--}}
+{{!< default}}
+
+<main class="gh-main">
+    <section class="gh-archive gh-outer">
+        <div class="gh-archive-inner gh-inner">
+            <header class="gh-archive-header">
+                <h1 class="gh-archive-title">{{t "All posts"}}</h1>
+            </header>
+        </div>
+    </section>
+
+    <div class="gh-lp-mixed-grid gh-outer">
+        <div class="gh-inner">
+            {{#foreach posts}}
+                {{#if @first}}<div class="gh-lp-grid gh-lp-grid--wide">{{/if}}
+                <article class="gh-lp-card {{post_class}}">
+                    <a class="gh-lp-card-inner" href="{{url}}">
+                        {{#if feature_image}}
+                            <figure class="gh-lp-card-image">
+                                <img
+                                    srcset="{{img_url feature_image size="s"}} 300w,
+                                            {{img_url feature_image size="m"}} 720w,
+                                            {{img_url feature_image size="l"}} 960w"
+                                    sizes="(max-width: 767px) 100vw, 400px"
+                                    src="{{img_url feature_image size="m"}}"
+                                    alt="{{#if feature_image_alt}}{{feature_image_alt}}{{else}}{{title}}{{/if}}"
+                                    loading="lazy"
+                                >
+                            </figure>
+                        {{/if}}
+                        <div class="gh-lp-card-content">
+                            <div class="gh-lp-card-meta-row">
+                                {{#if featured}}
+                                    <span class="gh-lp-featured-badge" aria-label="Featured post">★ Featured</span>
+                                {{/if}}
+                                {{#if primary_tag.name}}
+                                    <span class="gh-lp-tag" {{#if primary_tag.accent_color}}style="--cat-accent: {{primary_tag.accent_color}};"{{/if}}>{{primary_tag.name}}</span>
+                                {{/if}}
+                            </div>
+                            <h2 class="gh-lp-card-title">{{title}}</h2>
+                            {{#if excerpt}}
+                                <p class="gh-lp-card-excerpt">{{excerpt}}</p>
+                            {{/if}}
+                            <div class="gh-lp-meta">
+                                <time datetime="{{date format="YYYY-MM-DD"}}">{{date format="DD MMM YYYY"}}</time>
+                                <span class="gh-lp-dot">·</span>
+                                <span>{{reading_time minute=(t "1 min read") minutes=(t "% min read")}}</span>
+                            </div>
+                        </div>
+                    </a>
+                </article>
+                {{#if @last}}</div>{{/if}}
+            {{/foreach}}
+        </div>
+    </div>
+
+    {{pagination}}
+</main>

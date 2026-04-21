@@ -1,0 +1,336 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+# Opt into Node.js 24 for JS-based actions (checkout, setup-node, action-gh-release)
+# to clear the "Node.js 20 actions are deprecated" annotation. Once Node 24 becomes
+# the runner default (June 2026) this env var can be removed.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Install dependencies
+        run: npm ci --loglevel=error
+        # gscan → @tryghost/logging pulls deprecated transitive deps
+        # (request, rimraf@2, glob@6, uuid@3, har-validator) that we cannot
+        # upgrade without Ghost publishing a new gscan release. loglevel=error
+        # keeps the CI log readable without masking real problems.
+
+      - name: Check README exists and is non-empty
+        run: |
+          test -s README.md || (echo "ERROR: README.md is missing or empty" && exit 1)
+
+      - name: Check package.json required fields
+        run: |
+          node -e "
+          const p = require('./package.json');
+          const missing = [];
+          if (!p.name) missing.push('name');
+          if (!p.version) missing.push('version');
+          if (!p.engines || !p.engines.ghost) missing.push('engines.ghost');
+          if (missing.length) { console.error('Missing fields:', missing.join(', ')); process.exit(1); }
+          console.log('package.json fields OK');
+          "
+
+      - name: Check for Ghost attribution link
+        run: |
+          grep -rq "ghost\.org" --include="*.hbs" . || \
+            { echo "ERROR: No Ghost attribution link found in templates"; exit 1; }
+
+      - name: Check for hardcoded asset paths
+        run: |
+          if grep -rEn --include="*.hbs" 'src="/assets/|href="/assets/' .; then
+            echo "ERROR: Hardcoded /assets/ paths found — use {{asset}} helper"
+            exit 1
+          fi
+
+      - name: Check img tags have alt attributes
+        run: |
+          python3 - <<'EOF'
+          import glob, re, sys
+          files = [f for f in glob.glob('**/*.hbs', recursive=True) if 'node_modules' not in f]
+          bad = []
+          for path in files:
+              content = open(path).read()
+              for m in re.finditer(r'<img\b[^>]*>', content, re.DOTALL):
+                  if 'alt=' not in m.group(0):
+                      line = content[:m.start()].count('\n') + 1
+                      bad.append(f'{path}:{line}')
+          if bad:
+              print('ERROR: img tags missing alt attributes:')
+              for b in bad: print(' ', b)
+              sys.exit(1)
+          print('All img tags have alt attributes')
+          EOF
+
+      - name: Check for navigation structure
+        run: |
+          grep -rqE '<nav\b|role="navigation"' --include="*.hbs" . || \
+            { echo "ERROR: No <nav> or role=\"navigation\" found in templates"; exit 1; }
+
+      - name: Check for ghost_head SEO helper
+        run: |
+          grep -rq '{{ghost_head}}' --include="*.hbs" . || \
+            { echo "ERROR: {{ghost_head}} helper missing — required for SEO meta tags"; exit 1; }
+
+      - name: Validate HTML structure and accessibility
+        run: npm run validate:html
+
+      - name: Check expected file structure
+        run: |
+          for d in partials partials/components partials/icons assets/css assets/js locales; do
+            [ -d "$d" ] || { echo "ERROR: missing directory $d"; exit 1; }
+          done
+          for f in default.hbs index.hbs post.hbs page.hbs tag.hbs author.hbs README.md LICENSE package.json; do
+            [ -f "$f" ] || { echo "ERROR: missing required file $f"; exit 1; }
+          done
+          echo "File structure OK"
+
+      - name: Check README has required sections (≥50 lines, Features / Installation / Design settings)
+        run: |
+          awk 'END{ if (NR < 50) { print "ERROR: README too short ("NR" lines, need ≥50)"; exit 1 } }' README.md
+          for pat in '^## Features' '^## Installation' '^## (Customisation|Customization|Configuration|Design settings( reference)?)' '^## Requirements'; do
+            grep -Eq "$pat" README.md || { echo "ERROR: README missing section matching: $pat"; exit 1; }
+          done
+          echo "README quality OK"
+
+      - name: Check all partials are referenced
+        run: |
+          python3 - <<'EOF'
+          import glob, os, re, sys
+          partials = []
+          for p in glob.glob('partials/**/*.hbs', recursive=True):
+              name = os.path.splitext(os.path.relpath(p, 'partials'))[0]
+              partials.append(name)
+          hbs = ''
+          for p in glob.glob('**/*.hbs', recursive=True):
+              if 'node_modules' in p: continue
+              hbs += open(p).read()
+          unused = [n for n in partials
+                    if not re.search(r'\{\{>\s*["\']?' + re.escape(n) + r'["\']?', hbs)]
+          if unused:
+              print(f'ERROR: {len(unused)} unused partial(s) — remove them: ' + ', '.join(unused))
+              sys.exit(1)
+          print(f'All {len(partials)} partials are referenced')
+          EOF
+
+      - name: Check empty-state fallbacks (feature_image, tags, author bio)
+        run: |
+          python3 - <<'EOF'
+          import glob, re, sys
+          all_hbs = {p: open(p).read() for p in glob.glob('**/*.hbs', recursive=True)
+                     if 'node_modules' not in p}
+          combined = '\n'.join(all_hbs.values())
+          required = [
+              (r'\{\{#if feature_image\}\}', 'guard for feature_image'),
+              (r'\{\{#(if|foreach|each) tags\}\}', 'guard/iteration for tags'),
+              (r'\{\{#if (primary_author\.bio|author\.bio|\.\./bio|bio)\}\}', 'guard for author bio'),
+          ]
+          missing = [msg for pat, msg in required if not re.search(pat, combined)]
+          if missing:
+              print('ERROR: missing empty-state fallbacks:')
+              for m in missing: print(' ', m)
+              sys.exit(1)
+          print('Empty-state fallbacks OK')
+          EOF
+
+      - name: Check code comments exist
+        run: |
+          python3 - <<'EOF'
+          import glob, re, sys
+          files = {
+              'CSS': glob.glob('assets/css/**/*.css', recursive=True),
+              'JS':  [f for f in glob.glob('assets/js/**/*.js', recursive=True) if 'lib/' not in f],
+              'HBS': [f for f in glob.glob('**/*.hbs', recursive=True) if 'node_modules' not in f],
+          }
+          pat = re.compile(r'/\*|\*/|^\s*//|\{\{!--', re.MULTILINE)
+          failed = False
+          for label, paths in files.items():
+              total = 0
+              for p in paths:
+                  total += len(pat.findall(open(p).read()))
+              print(f'{label}: {total} comments across {len(paths)} files')
+              if total < 5:
+                  print(f'ERROR: {label} has only {total} comments — document logic (min 5)')
+                  failed = True
+          if failed: sys.exit(1)
+          EOF
+
+      - name: Check featured-post custom styling
+        run: |
+          if grep -rEq --include="*.hbs" --include="*.css" '\{\{#if featured\}\}|post-card-featured|is-featured|\.featured\b' .; then
+            echo "Featured-post custom styling found"
+          else
+            echo "ERROR: No featured-post custom styling found (Ghost marketplace recommendation)"
+            exit 1
+          fi
+
+      - name: Check for dead CSS class selectors
+        run: |
+          python3 - <<'EOF'
+          import glob, re, sys, os
+          # Parse class selectors defined in source CSS (not built).
+          css_src = open('assets/css/screen.css').read()
+          # Match simple .class-name tokens (avoid pseudo-classes like :hover).
+          defined = set(re.findall(r'\.([a-zA-Z_][\w-]*)(?=[\s,:.{\[>+~])', css_src))
+          # Build a corpus of every place a class could be referenced.
+          haystack_files = []
+          for pat in ('**/*.hbs', 'assets/js/**/*.js', 'assets/css/**/*.css',
+                      'assets/built/lifepost.css'):
+              haystack_files.extend(glob.glob(pat, recursive=True))
+          haystack = ''
+          for f in haystack_files:
+              if 'node_modules' in f: continue
+              haystack += open(f).read() + '\n'
+          # Classes Ghost injects into post HTML via {{content}}, {{post_class}}, etc.
+          # We can't see them in templates but they are real usages.
+          GHOST_INJECTED_PREFIXES = (
+              'kg-', 'gh-content', 'gh-canvas', 'gh-article', 'gh-post',
+              'gh-head', 'gh-foot', 'gh-main', 'gh-site', 'gh-outer', 'gh-inner',
+              'gh-btn', 'gh-primary-btn', 'gh-outline-btn', 'gh-icon-btn', 'gh-text-btn',
+              'gh-dropdown', 'gh-burger', 'gh-search', 'gh-social',
+              'gh-card', 'gh-author', 'gh-tag',
+              'is-', 'has-', 'post-', 'page-', 'tag-template', 'author-template',
+              'home-template', 'paged', 'nav', 'pswp', 'featured',
+              'dark-mode', 'theme-', 'error-', 'pagination', 'readmore',
+          )
+          def is_ghost_injected(cls):
+              return any(cls == p.rstrip('-') or cls.startswith(p) for p in GHOST_INJECTED_PREFIXES)
+          dead = []
+          for cls in sorted(defined):
+              if is_ghost_injected(cls): continue
+              # Count references OUTSIDE the definition file itself.
+              # Strip all occurrences in screen.css, then search remaining haystack.
+              pattern = re.compile(r'[.\s"\'`=({\[]' + re.escape(cls) + r'(?![\w-])')
+              # Search haystack (includes screen.css — so require >1 match since the
+              # definition itself counts as one).
+              matches = pattern.findall(haystack)
+              if len(matches) == 0:
+                  dead.append(cls)
+          if dead:
+              print(f'ERROR: {len(dead)} dead CSS class(es) in assets/css/screen.css:')
+              for c in dead: print(f'  .{c}')
+              sys.exit(1)
+          print(f'No dead classes found ({len(defined)} classes checked)')
+          EOF
+
+      - name: Check every gh-* class used in templates has a CSS rule
+        # Inverse of the dead-CSS-class scan: catches the v0.0.24 bug where a
+        # refactor deleted CSS rules while the templates still referenced the
+        # classes. Every custom .gh-* class that appears in a class="..." attr
+        # (or a .gh-* JS selector) must have a definition in screen.css or the
+        # hand-maintained assets/built/lifepost.css overlay.
+        run: |
+          python3 - <<'EOF'
+          import glob, re, sys
+          # Collect defined class tokens from both authoring CSS files.
+          css_sources = []
+          for p in ('assets/css/screen.css', 'assets/built/lifepost.css'):
+              try: css_sources.append(open(p).read())
+              except FileNotFoundError: pass
+          defined = set()
+          for css in css_sources:
+              defined.update(re.findall(r'\.([a-zA-Z_][\w-]*)(?=[\s,:.{\[>+~])', css))
+          # Collect gh-* tokens used in templates and JS.
+          used = set()
+          # Map token -> list of (file, line) for actionable errors.
+          locations = {}
+          def note(tok, path, lineno):
+              locations.setdefault(tok, []).append(f'{path}:{lineno}')
+          # class="..." / class='...' — pull tokens, support Handlebars mustaches.
+          attr_re = re.compile(r'''class\s*=\s*["']([^"']+)["']''')
+          for p in glob.glob('**/*.hbs', recursive=True):
+              if 'node_modules' in p: continue
+              txt = open(p).read()
+              for m in attr_re.finditer(txt):
+                  line = txt[:m.start()].count('\n') + 1
+                  # Strip {{...}} mustache expressions so we only keep literal tokens.
+                  literal = re.sub(r'\{\{[^}]*\}\}', ' ', m.group(1))
+                  for tok in literal.split():
+                      if tok.startswith('gh-'):
+                          used.add(tok); note(tok, p, line)
+          # .gh-* selectors and 'gh-*' strings in JS (querySelector, classList.*)
+          js_tok_re = re.compile(r'''["'`.]gh-[\w-]+''')
+          for p in glob.glob('assets/js/**/*.js', recursive=True):
+              txt = open(p).read()
+              for m in js_tok_re.finditer(txt):
+                  tok = m.group(0).lstrip(""".'"`""")
+                  line = txt[:m.start()].count('\n') + 1
+                  used.add(tok); note(tok, p, line)
+          # Classes Ghost injects (not our responsibility to style) or that
+          # come from upstream Source-theme conventions. Keep in sync with the
+          # dead-class scan above.
+          GHOST_INJECTED_PREFIXES = (
+              'gh-content', 'gh-canvas', 'gh-article', 'gh-post',
+              'gh-head', 'gh-foot', 'gh-main', 'gh-site', 'gh-outer', 'gh-inner',
+              'gh-btn', 'gh-primary-btn', 'gh-outline-btn', 'gh-icon-btn', 'gh-text-btn',
+              'gh-dropdown', 'gh-burger', 'gh-search', 'gh-social',
+              'gh-card', 'gh-author', 'gh-tag',
+          )
+          def is_ghost_injected(cls):
+              return any(cls == p or cls.startswith(p + '-') or cls.startswith(p) and p.endswith('-')
+                         for p in GHOST_INJECTED_PREFIXES)
+          missing = []
+          for cls in sorted(used):
+              if is_ghost_injected(cls): continue
+              if cls in defined: continue
+              missing.append(cls)
+          if missing:
+              print(f'ERROR: {len(missing)} gh-* class(es) used in templates with no CSS rule')
+              print('       in assets/css/screen.css or assets/built/lifepost.css:')
+              for cls in missing:
+                  locs = ', '.join(locations.get(cls, [])[:3])
+                  print(f'  .{cls}    (used at: {locs})')
+              sys.exit(1)
+          print(f'All {len(used)} gh-* classes used in templates have CSS rules')
+          EOF
+
+      - name: Check for references to deleted/missing partials
+        run: |
+          python3 - <<'EOF'
+          import glob, os, re, sys
+          existing = set()
+          for p in glob.glob('partials/**/*.hbs', recursive=True):
+              existing.add(os.path.splitext(os.path.relpath(p, 'partials'))[0])
+          bad = []
+          for p in glob.glob('**/*.hbs', recursive=True):
+              if 'node_modules' in p: continue
+              content = open(p).read()
+              for m in re.finditer(r'\{\{>\s*["\']?([\w/-]+)["\']?', content):
+                  ref = m.group(1)
+                  if ref not in existing:
+                      line = content[:m.start()].count('\n') + 1
+                      bad.append(f'{p}:{line}  missing partial: {ref}')
+          if bad:
+              print('ERROR: references to non-existent partials:')
+              for b in bad: print(' ', b)
+              sys.exit(1)
+          print('All partial references resolve')
+          EOF
+
+      - name: Validate theme (gscan)
+        run: npm test
+
+      - name: Build and zip theme
+        run: mkdir -p dist && npm run zip
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: dist/lifepost.zip

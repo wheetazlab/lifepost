@@ -1,0 +1,129 @@
+{
+    "name": "lifepost",
+    "description": "Lifepost — a lifestyle blog theme for Ghost with dark mode, Cmd+K search, reading progress, and trip collection pages.",
+    "version": "1.0.0",
+    "engines": {
+        "ghost": ">=6.0.0"
+    },
+    "license": "MIT",
+    "author": {
+        "name": "Stephen Wheet",
+        "email": "stephenwheet@gmail.com"
+    },
+    "keywords": [
+        "ghost",
+        "theme",
+        "ghost-theme"
+    ],
+    "config": {
+        "posts_per_page": 9,
+        "image_sizes": {
+            "xs": { "width": 150 },
+            "s": { "width": 300 },
+            "m": { "width": 720 },
+            "l": { "width": 960 },
+            "xl": { "width": 1200 },
+            "xxl": { "width": 2000 }
+        },
+        "card_assets": true,
+        "custom": {
+            "color_scheme": {
+                "type": "select",
+                "options": ["Auto", "Light", "Dark"],
+                "default": "Auto"
+            },
+            "heading_font": {
+                "type": "select",
+                "options": ["Fraunces", "Playfair Display", "Source Serif 4", "IBM Plex Serif", "Sora", "Space Grotesk", "Inter"],
+                "default": "Fraunces"
+            },
+            "typography": {
+                "type": "select",
+                "options": ["Default", "Narrow"],
+                "default": "Default"
+            },
+            "background_color": {
+                "type": "color",
+                "default": "#fbf7f1"
+            },
+            "accent_success": {
+                "type": "color",
+                "default": "#059669"
+            },
+            "accent_danger": {
+                "type": "color",
+                "default": "#c0392b"
+            },
+            "accent_star": {
+                "type": "color",
+                "default": "#f4b400"
+            },
+            "on_accent_color": {
+                "type": "color",
+                "default": "#15171a"
+            },
+            "header_scrim_color": {
+                "type": "color",
+                "default": "#000000"
+            },
+            "code_background": {
+                "type": "color",
+                "default": "#0f1115"
+            },
+            "code_text": {
+                "type": "color",
+                "default": "#e6e7eb"
+            },
+            "navigation_layout": {
+                "type": "select",
+                "options": ["Logo on the left", "Logo in the middle", "Stacked"],
+                "default": "Logo on the left"
+            },
+            "email_signup_text": {
+                "type": "text",
+                "default": "Get new posts delivered to your inbox"
+            },
+            "footer_text": {
+                "type": "text",
+                "default": ""
+            },
+            "primary_header": {
+                "type": "text",
+                "default": "A blog theme for all of lifes events",
+                "group": "homepage"
+            },
+            "secondary_header": {
+                "type": "text",
+                "default": "Subscribe now!",
+                "group": "homepage"
+            },
+            "show_category_strip": {
+                "type": "boolean",
+                "default": true,
+                "group": "homepage"
+            },
+            "show_reading_progress": {
+                "type": "boolean",
+                "default": true,
+                "group": "post"
+            },
+            "show_related_posts": {
+                "type": "boolean",
+                "default": true,
+                "group": "post"
+            }
+        }
+    },
+    "scripts": {
+        "dev": "gulp",
+        "test": "gscan .",
+        "validate:html": "htmlhint '**/*.hbs' --ignore 'node_modules/**'",
+        "zip": "zip -r dist/lifepost.zip . --exclude 'node_modules/*' --exclude 'dist/*' --exclude '.git/*' --exclude '.github/*' --exclude '.claude/*' --exclude '.vscode/*' --exclude '*.log' --exclude 'package-lock.json' --exclude '.DS_Store' --exclude 'assets/.DS_Store' --exclude '.gitignore' --exclude '.htmlhintrc' --exclude 'gulpfile.js' --exclude 'assets/css/*' --exclude 'assets/js/*' --exclude 'assets/built/*.map'"
+    },
+    "devDependencies": {
+        "gscan": "^6.0.0",
+        "htmlhint": "^1.1.4",
+        "@tryghost/shared-theme-assets": "2.6.1",
+        "@tryghost/theme-translations": "^0.0.9"
+    }
+}

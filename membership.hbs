@@ -1,0 +1,93 @@
+{{!-- Template name: Membership --}}
+{{!--
+    membership.hbs — Pricing / membership tiers page.
+    Select this template in Ghost admin → Page → Template → "Membership".
+    Renders paid tiers pulled from @site.tiers. If no paid tiers are configured,
+    falls back to a free newsletter sign-up CTA only.
+--}}
+{{!< default}}
+
+{{#page}}
+<main class="gh-main">
+
+    {{!-- Hero --}}
+    <section class="gh-lp-membership-hero gh-outer">
+        <div class="gh-inner">
+            <h1 class="gh-lp-membership-title">{{title}}</h1>
+            {{#if custom_excerpt}}
+                <p class="gh-lp-membership-lede">{{custom_excerpt}}</p>
+            {{else}}
+                <p class="gh-lp-membership-lede">{{t "Choose the plan that works for you."}}</p>
+            {{/if}}
+        </div>
+    </section>
+
+    {{!-- Tier cards --}}
+    <section class="gh-lp-tiers-section gh-outer">
+        <div class="gh-inner">
+            <div class="gh-lp-tiers">
+
+                {{!-- Free tier --}}
+                <div class="gh-lp-tier gh-lp-tier-free">
+                    <div class="gh-lp-tier-header">
+                        <h2 class="gh-lp-tier-name">{{t "Free"}}</h2>
+                        <div class="gh-lp-tier-price">
+                            <span class="gh-lp-tier-amount">{{t "Free"}}</span>
+                        </div>
+                    </div>
+                    <ul class="gh-lp-tier-benefits">
+                        <li>{{t "Access to all public posts"}}</li>
+                        <li>{{t "Weekly newsletter"}}</li>
+                    </ul>
+                    <button class="gh-lp-tier-btn gh-lp-tier-btn-free" data-portal="signup/free">
+                        {{t "Subscribe free"}}
+                    </button>
+                </div>
+
+                {{!-- Paid tiers --}}
+                {{#foreach @site.tiers}}
+                    {{#if monthly_price}}
+                    <div class="gh-lp-tier gh-lp-tier-paid{{#if @first}} gh-lp-tier-featured{{/if}}">
+                        {{#if @first}}<div class="gh-lp-tier-badge">{{t "Most popular"}}</div>{{/if}}
+                        <div class="gh-lp-tier-header">
+                            <h2 class="gh-lp-tier-name">{{name}}</h2>
+                            {{#if description}}
+                                <p class="gh-lp-tier-description">{{description}}</p>
+                            {{/if}}
+                            <div class="gh-lp-tier-price">
+                                <span class="gh-lp-tier-amount">{{price monthly_price currency=currency}}</span>
+                                <span class="gh-lp-tier-period">/{{t "month"}}</span>
+                            </div>
+                            {{#if yearly_price}}
+                                <p class="gh-lp-tier-annual">
+                                    {{t "or"}} {{price yearly_price currency=currency}}/{{t "year"}}
+                                </p>
+                            {{/if}}
+                        </div>
+                        {{#if benefits}}
+                            <ul class="gh-lp-tier-benefits">
+                                {{#foreach benefits}}
+                                    <li>{{this}}</li>
+                                {{/foreach}}
+                            </ul>
+                        {{/if}}
+                        <button class="gh-lp-tier-btn gh-lp-tier-btn-paid" data-portal="signup/{{id}}">
+                            {{t "Subscribe"}}
+                        </button>
+                    </div>
+                    {{/if}}
+                {{/foreach}}
+
+            </div>
+        </div>
+    </section>
+
+    {{!-- FAQ / body content from the page itself --}}
+    {{#if html}}
+        <section class="gh-canvas gh-lp-membership-content">
+            {{content}}
+        </section>
+    {{/if}}
+
+</main>
+{{/page}}

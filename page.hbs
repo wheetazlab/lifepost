@@ -1,0 +1,14 @@
+{{!--
+    page.hbs — Static page template.
+    Renders a Ghost page with the article partial (title, feature image, content).
+    No sidebar, no related posts, no CTA — clean reading layout.
+--}}
+{{!< default}}
+
+{{#post}}
+
+<main class="gh-main">
+    {{> "components/article"}}
+</main>
+
+{{/post}}

@@ -1,0 +1,20 @@
+{{!--
+    post.hbs — Single post template.
+    Renders the article body, optional related posts, and an email sign-up CTA.
+    Custom settings used: show_reading_progress, show_related_posts, email_signup_text.
+--}}
+{{!< default}}
+
+{{#post}}
+
+<main class="gh-main" data-post-id="{{comment_id}}" data-post-tags="{{#foreach tags}}{{slug}}{{#unless @last}},{{/unless}}{{/foreach}}">
+    {{> "components/article" showPublishedAt=true hideFeatureImage=false showComments=true}}
+
+    {{#if @custom.show_related_posts}}
+        {{> "components/related-posts"}}
+    {{/if}}
+
+    {{> "components/cta" title=@custom.email_signup_text}}
+</main>
+
+{{/post}}

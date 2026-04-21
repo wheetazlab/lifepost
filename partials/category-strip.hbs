@@ -1,0 +1,19 @@
+{{!-- Category strip: highlights public tags on homepage --}}
+<section class="gh-categories gh-outer">
+    <div class="gh-categories-inner gh-inner">
+        <h2 class="gh-categories-heading">{{t "Browse by category"}}</h2>
+        <div class="gh-categories-grid">
+            {{#get "tags" filter="visibility:public" order="name asc" limit="20"}}
+                {{#foreach tags}}
+                    <a class="gh-category-card" href="{{url}}" {{#if meta_title}}data-order="{{meta_title}}" {{/if}}{{#if accent_color}}style="--cat-accent: {{accent_color}};"{{/if}}>
+                        <span class="gh-category-name">{{name}}</span>
+                        {{#if description}}
+                            <span class="gh-category-description">{{description}}</span>
+                        {{/if}}
+                        <span class="gh-category-cta">{{t "View all →"}}</span>
+                    </a>
+                {{/foreach}}
+            {{/get}}
+        </div>
+    </div>
+</section>

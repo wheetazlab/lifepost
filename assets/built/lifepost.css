@@ -1,0 +1,1164 @@
+/* ==========================================================================
+   Lifepost — theme overlay styles
+   Loaded AFTER built/screen.css. All rules are additive overrides of the
+   shared Ghost base styles.
+   ========================================================================== */
+
+/* ---------- Skip link (a11y) ---------- */
+body.theme-lp a.gh-lp-skip-link {
+    position: absolute;
+    top: -48px;
+    left: 8px;
+    z-index: 1000;
+    padding: 10px 16px;
+    background: var(--sw-on-accent);
+    color: var(--sw-on-dark);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.4rem;
+    border-radius: 0 0 8px 8px;
+    transition: top 160ms ease;
+}
+body.theme-lp a.gh-lp-skip-link:focus {
+    top: 0;
+    outline: 2px solid var(--sw-on-dark);
+    outline-offset: 2px;
+    color: var(--sw-on-dark);
+}
+#main-content:focus { outline: none; }
+
+/* ---------- Design tokens ---------- */
+:root {
+    --sw-font-body: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --sw-font-heading: "Fraunces", ui-serif, Georgia, "Times New Roman", serif;
+    --sw-font-heading-alt: "Sora", "Inter", ui-sans-serif, system-ui, sans-serif;
+    --sw-font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+
+    --sw-radius: 14px;
+    --sw-radius-sm: 8px;
+    --sw-shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.05);
+    --sw-shadow-card-hover: 0 4px 8px rgba(0,0,0,0.06), 0 16px 36px rgba(0,0,0,0.1);
+    --sw-shadow-nav: 0 1px 0 rgba(0,0,0,0.02), 0 6px 18px -8px rgba(0,0,0,0.08);
+    --sw-shadow-code: 0 1px 0 rgba(0,0,0,0.02), 0 6px 24px -12px rgba(0,0,0,0.3);
+    --sw-table-fade-edge: rgba(0,0,0,0.08);
+    --sw-table-stripe: rgba(0,0,0,0.02);
+
+    /* Site accent comes from Ghost admin (Design → Brand). Per-category tints
+       come from Ghost tag accent_color via --cat-accent in templates. */
+    --sw-accent: var(--ghost-accent-color, #2563eb);
+    --sw-accent-success: #059669;
+    --sw-accent-danger: #c0392b;
+    --sw-accent-star: #f4b400;
+
+    --sw-bg: #fbf7f1;
+    --sw-bg-elevated: #ffffff;
+    --sw-bg-subtle: #f3ede3;
+    --sw-text: #15171a;
+    --sw-text-muted: #5a5f67;
+    --sw-border: rgba(0,0,0,0.08);
+    --sw-border-strong: rgba(0,0,0,0.16);
+    --sw-on-dark: #ffffff;
+    --sw-on-accent: #15171a;
+    --sw-scrim: rgba(0,0,0,0.6);
+
+    /* Code blocks keep a dark palette in both light and dark mode */
+    --sw-code-bg: #0f1115;
+    --sw-code-text: #e6e7eb;
+    --sw-code-muted: #8a8f99;
+    --sw-code-fg-secondary: #cfd3da;
+
+    --sw-transition-fast: 160ms cubic-bezier(.2,.8,.2,1);
+    --sw-transition-med: 280ms cubic-bezier(.2,.8,.2,1);
+
+    /* Mobile/desktop breakpoint. Read from JS via getComputedStyle.
+       Note: CSS @media queries cannot consume custom properties (browser limitation),
+       so media queries must use the literal value below. Keep them in sync. */
+    --sw-breakpoint-mobile: 768px;
+}
+
+html[data-theme="dark"] {
+    --sw-bg: #0e1013;
+    --sw-bg-elevated: #16191d;
+    --sw-bg-subtle: #1c2026;
+    --sw-text: #f4f4f6;
+    --sw-text-muted: #a2a6ad;
+    --sw-border: rgba(255,255,255,0.1);
+    --sw-border-strong: rgba(255,255,255,0.22);
+    --sw-shadow-card: 0 1px 3px rgba(0,0,0,0.4), 0 6px 18px rgba(0,0,0,0.5);
+    --sw-shadow-card-hover: 0 4px 10px rgba(0,0,0,0.5), 0 16px 36px rgba(0,0,0,0.6);
+    --sw-shadow-nav: 0 1px 0 rgba(255,255,255,0.03), 0 6px 18px -8px rgba(0,0,0,0.6);
+    --sw-shadow-code: 0 1px 0 rgba(255,255,255,0.03), 0 6px 24px -12px rgba(0,0,0,0.6);
+    --sw-table-fade-edge: rgba(0,0,0,0.5);
+    --sw-table-stripe: rgba(255,255,255,0.02);
+}
+
+/* ---------- Heading-font switcher (Design → Heading font) ----------
+   Default --sw-font-heading is Fraunces (set in :root above).
+   Swapping data-heading-font on <html> rebinds the heading family for every
+   h1–h6 and display surface that references var(--sw-font-heading). */
+html[data-heading-font="Playfair Display"] { --sw-font-heading: "Playfair Display", ui-serif, Georgia, "Times New Roman", serif; }
+html[data-heading-font="Source Serif 4"]   { --sw-font-heading: "Source Serif 4", ui-serif, Georgia, "Times New Roman", serif; }
+html[data-heading-font="IBM Plex Serif"]   { --sw-font-heading: "IBM Plex Serif", ui-serif, Georgia, "Times New Roman", serif; }
+html[data-heading-font="Sora"]             { --sw-font-heading: "Sora", "Inter", ui-sans-serif, system-ui, sans-serif; }
+html[data-heading-font="Space Grotesk"]    { --sw-font-heading: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif; }
+html[data-heading-font="Inter"]            { --sw-font-heading: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif; }
+
+/* ---------- Typography ---------- */
+body.theme-lp {
+    font-family: var(--sw-font-body);
+    font-feature-settings: "ss01", "cv11";
+    background-color: var(--sw-bg);
+    color: var(--sw-text);
+    transition: background-color var(--sw-transition-med), color var(--sw-transition-med);
+}
+
+body.theme-lp :is(h1, h2, h3, h4, h5, h6) {
+    font-family: var(--sw-font-heading);
+    font-feature-settings: "ss01";
+    letter-spacing: -0.015em;
+    color: var(--sw-text);
+}
+
+body.theme-lp .gh-article-title,
+body.theme-lp .gh-lp-feature-title,
+body.theme-lp .gh-archive-title {
+    font-weight: 600;
+    letter-spacing: -0.022em;
+    line-height: 1.08;
+}
+
+/* Reset shared-theme-assets width-variation tricks — Inter & Fraunces are not wdth-variable */
+body.theme-lp,
+body.theme-lp :is(h1,h2,h3,h4,h5,h6),
+body.theme-lp .gh-btn,
+body.theme-lp .gh-head-logo {
+    font-variation-settings: normal;
+}
+
+body.theme-lp a { color: inherit; }
+body.theme-lp .gh-content a {
+    color: var(--sw-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+}
+
+/* ---------- Frosted-glass sticky nav ---------- */
+/* ID selector beats upstream `.is-head-transparent .gh-head { position: absolute }` so home-with-hero stays sticky too */
+#gh-head.gh-head-lp {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: color-mix(in srgb, var(--sw-bg) 80%, transparent);
+    backdrop-filter: saturate(180%) blur(12px);
+    -webkit-backdrop-filter: saturate(180%) blur(12px);
+    transition: background-color var(--sw-transition-med), box-shadow var(--sw-transition-med), border-color var(--sw-transition-med);
+    border-bottom: 1px solid transparent;
+}
+.gh-head-lp.is-scrolled {
+    background-color: color-mix(in srgb, var(--sw-bg) 92%, transparent);
+    border-bottom-color: var(--sw-border);
+    box-shadow: var(--sw-shadow-nav);
+}
+
+/* Respect the original transparent-hero mode on homepage with cover image */
+.gh-head-lp.is-head-transparent:not(.is-scrolled) {
+    background-color: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+/* Nav/action colors: override upstream white-on-transparent fallback */
+body.theme-lp .gh-head-lp .nav li a,
+body.theme-lp .gh-head-lp .nav-more-toggle,
+body.theme-lp .gh-head-lp .gh-search,
+body.theme-lp .gh-head-lp .gh-head-link {
+    color: var(--sw-text) !important;
+}
+/* Compact centered header: flex row, auto-sized, centered as one block (desktop only) */
+@media (min-width: 768px) {
+    body.theme-lp .gh-head-lp.is-head-left-logo .gh-head-inner {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 32px;
+    }
+    body.theme-lp .gh-head-lp.is-head-left-logo .gh-head-menu {
+        margin: 0;
+    }
+}
+
+/* Mobile open menu: theme-aware background + legible text in dark mode */
+@media (max-width: 767px) {
+    body.theme-lp .is-head-open#gh-head,
+    body.theme-lp .is-head-open#gh-head .gh-head-actions {
+        background-color: var(--sw-bg) !important;
+    }
+    body.theme-lp .is-head-open#gh-head .nav li a,
+    body.theme-lp .is-head-open#gh-head .nav-more-toggle,
+    body.theme-lp .is-head-open#gh-head .gh-head-link,
+    body.theme-lp .is-head-open#gh-head .gh-search {
+        color: var(--sw-text) !important;
+    }
+}
+
+/* "More" dropdown panel: theme-aware bg/text (upstream hardcodes #fff / #15171a) */
+body.theme-lp .gh-head-lp .gh-dropdown {
+    background-color: var(--sw-bg-elevated);
+    box-shadow: var(--sw-shadow-card);
+}
+body.theme-lp .gh-head-lp .gh-dropdown li a {
+    color: var(--sw-text) !important;
+}
+body.theme-lp .gh-head-lp .gh-dropdown li a:hover {
+    background-color: var(--sw-bg-subtle);
+}
+
+/* Dark-mode theme toggle */
+.gh-theme-toggle {
+    position: relative;
+    cursor: pointer;
+    color: var(--sw-text);
+}
+.gh-theme-toggle svg { width: 20px; height: 20px; transition: transform var(--sw-transition-fast), opacity var(--sw-transition-fast); }
+.gh-theme-toggle .gh-theme-toggle-moon { display: none; }
+html[data-theme="dark"] .gh-theme-toggle .gh-theme-toggle-sun { display: none; }
+html[data-theme="dark"] .gh-theme-toggle .gh-theme-toggle-moon { display: block; }
+.gh-theme-toggle:hover svg { transform: rotate(-12deg); }
+
+/* ---------- Homepage mixed-size grid ---------- */
+.gh-lp-mixed-grid { margin: 48px 0 64px; }
+
+.gh-lp-feature {
+    display: block;
+    background: var(--sw-bg-elevated);
+    border-radius: var(--sw-radius);
+    overflow: hidden;
+    box-shadow: var(--sw-shadow-card);
+    transition: transform var(--sw-transition-med), box-shadow var(--sw-transition-med);
+    margin-bottom: 32px;
+}
+.gh-lp-feature:hover { transform: translateY(-3px); box-shadow: var(--sw-shadow-card-hover); }
+.gh-lp-feature-inner { display: grid; grid-template-columns: 1.2fr 1fr; align-items: stretch; color: inherit; text-decoration: none; min-height: 360px; }
+.gh-lp-feature-image { margin: 0; overflow: hidden; min-width: 0; min-height: 320px; background: var(--sw-bg-subtle); position: relative; }
+.gh-lp-feature-image img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 600ms cubic-bezier(.2,.8,.2,1); }
+.gh-lp-feature:hover .gh-lp-feature-image img { transform: scale(1.04); }
+.gh-lp-feature-content { padding: clamp(24px, 3vw, 44px); display: flex; flex-direction: column; justify-content: center; gap: 14px; }
+.gh-lp-feature-title { font-size: clamp(2.6rem, 2.4vw + 1.4rem, 4.2rem); line-height: 1.08; margin: 0; }
+.gh-lp-feature-excerpt { color: var(--sw-text-muted); font-size: 1.7rem; line-height: 1.55; margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+.gh-lp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+
+.gh-lp-card {
+    background: var(--sw-bg-elevated);
+    border-radius: var(--sw-radius);
+    overflow: hidden;
+    box-shadow: var(--sw-shadow-card);
+    transition: transform var(--sw-transition-med), box-shadow var(--sw-transition-med);
+}
+.gh-lp-card:hover { transform: translateY(-3px); box-shadow: var(--sw-shadow-card-hover); }
+.gh-lp-card-inner { display: block; color: inherit; text-decoration: none; }
+.gh-lp-card-image { margin: 0; overflow: hidden; aspect-ratio: 3/2; background: var(--sw-bg-subtle); }
+.gh-lp-card-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 600ms cubic-bezier(.2,.8,.2,1); }
+.gh-lp-card:hover .gh-lp-card-image img { transform: scale(1.05); }
+.gh-lp-card-content { padding: 20px 22px 22px; display: flex; flex-direction: column; gap: 10px; }
+.gh-lp-card-title { font-size: 2.1rem; line-height: 1.2; margin: 0; }
+.gh-lp-card-excerpt { color: var(--sw-text-muted); font-size: 1.45rem; line-height: 1.5; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+.gh-lp-tag {
+    display: inline-block;
+    font-family: var(--sw-font-heading-alt);
+    font-weight: 600;
+    font-size: 1.15rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--cat-accent, var(--sw-accent));
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--cat-accent, var(--sw-accent)) 12%, transparent);
+    align-self: flex-start;
+}
+
+.gh-lp-meta {
+    color: var(--sw-text-muted);
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: auto;
+}
+.gh-lp-dot { opacity: 0.5; }
+
+@media (max-width: 991px) {
+    .gh-lp-feature-inner { grid-template-columns: 1fr; }
+    .gh-lp-feature-image { aspect-ratio: 16/9; min-height: 0; }
+    .gh-lp-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+    .gh-lp-grid { grid-template-columns: 1fr; gap: 20px; }
+    .gh-lp-feature-title { font-size: 2.4rem; }
+}
+
+/* List item overrides — remove the podcast-style play button from the base styles */
+body.theme-lp .gh-list-item-content::before,
+body.theme-lp .gh-list-item-content::after { display: none; }
+body.theme-lp .gh-list-item-content { padding-bottom: 0; }
+body.theme-lp .gh-list-item-inner { border: 1px solid var(--sw-border); border-radius: var(--sw-radius); background: var(--sw-bg-elevated); transition: transform var(--sw-transition-med), box-shadow var(--sw-transition-med); }
+body.theme-lp .gh-list-item-inner:hover { transform: translateY(-2px); box-shadow: var(--sw-shadow-card-hover); }
+
+/* ---------- Tag / Author landing pages ---------- */
+.gh-lp-tag-hero { padding: 56px 0 36px; }
+.gh-lp-tag-eyebrow {
+    display: inline-block;
+    font-family: var(--sw-font-heading-alt);
+    font-weight: 600;
+    font-size: 1.3rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--cat-accent, var(--sw-accent));
+    background: color-mix(in srgb, var(--cat-accent, var(--sw-accent)) 14%, transparent);
+    padding: 6px 14px;
+    border-radius: 999px;
+    margin-bottom: 16px;
+}
+.gh-lp-tag-hero .gh-hero-primary { font-size: clamp(3.6rem, 4vw + 2rem, 6.4rem); margin: 0 0 12px; line-height: 1.05; }
+.gh-lp-tag-hero .gh-hero-secondary { color: var(--sw-text-muted); font-size: 1.8rem; max-width: 720px; margin: 0; }
+
+/* Author page polish */
+body.theme-lp .gh-author-page-header,
+body.theme-lp .gh-author-page-content { color: var(--sw-text); }
+body.theme-lp .gh-author-page-header .gh-author-name { font-family: var(--sw-font-heading); }
+
+.gh-lp-author-hero { padding: 48px 0 36px; }
+.gh-lp-author-avatar {
+    width: 88px; height: 88px; border-radius: 50%;
+    object-fit: cover; margin-bottom: 18px;
+    border: 3px solid var(--sw-bg-elevated);
+    box-shadow: var(--sw-shadow-card);
+}
+
+/* ---------- Homepage / archive hero ---------- */
+/* Base .gh-hero layout (deleted from screen.css in v0.0.24 but still used
+   by home.hbs, tag.hbs, author.hbs -- restored here on the hand-maintained
+   overlay so no gulp rebuild is required). */
+body.theme-lp .gh-hero {
+    padding: clamp(4rem, 8vh + 2rem, 9rem) 0 clamp(2.4rem, 4vh + 1rem, 4.8rem);
+    background:
+        radial-gradient(1100px 540px at 50% -10%, color-mix(in srgb, var(--sw-accent) 10%, transparent), transparent 60%),
+        var(--sw-bg);
+    text-align: center;
+}
+body.theme-lp .gh-hero-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 var(--gap, 24px);
+}
+body.theme-lp .gh-hero-logo {
+    display: block;
+    width: min(520px, 78%);
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+    filter: drop-shadow(0 8px 28px color-mix(in srgb, var(--sw-accent) 20%, transparent));
+}
+body.theme-lp .gh-hero-primary {
+    margin: 0;
+    font-size: clamp(2.8rem, 2.6vw + 1.5rem, 4.2rem);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--sw-text);
+}
+body.theme-lp .gh-hero-secondary {
+    margin: 0;
+    max-width: 640px;
+    font-size: clamp(1.6rem, 0.5vw + 1.4rem, 2rem);
+    color: var(--sw-text-muted);
+}
+@media (max-width: 767px) {
+    body.theme-lp .gh-hero { padding: 4.8rem 0 2.4rem; }
+    body.theme-lp .gh-hero-logo { width: 80%; }
+}
+
+/* ---------- Category strip layout ---------- */
+/* Section shell, heading, and responsive grid. Interior card styling is
+   defined in the "Category strip polish" block below. */
+body.theme-lp .gh-categories {
+    padding: clamp(3.2rem, 4vw + 1.6rem, 6.4rem) 0 clamp(1.6rem, 2vw + 0.8rem, 3.2rem);
+}
+body.theme-lp .gh-categories-inner {
+    max-width: var(--container-width, 1200px);
+    margin: 0 auto;
+    padding: 0 var(--gap, 24px);
+}
+body.theme-lp .gh-categories-heading {
+    margin: 0 0 clamp(1.6rem, 1vw + 1.2rem, 2.4rem);
+    font-family: var(--sw-font-heading-alt);
+    font-size: 1.4rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sw-text-muted);
+}
+body.theme-lp .gh-categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+}
+body.theme-lp .gh-category-card {
+    --cat-accent: var(--ghost-accent-color, var(--sw-accent));
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 24px;
+    color: var(--sw-text);
+    overflow: hidden;
+    text-decoration: none;
+}
+body.theme-lp .gh-category-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+}
+body.theme-lp .gh-category-name {
+    font-family: var(--sw-font-heading);
+    font-size: 2.1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--sw-text);
+}
+body.theme-lp .gh-category-description {
+    font-size: 1.45rem;
+    line-height: 1.45;
+    color: var(--sw-text-muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+body.theme-lp .gh-category-cta {
+    margin-top: auto;
+    font-size: 1.35rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--cat-accent, var(--sw-accent));
+}
+
+/* ---------- Category strip polish ---------- */
+body.theme-lp .gh-category-card {
+    border-radius: var(--sw-radius);
+    background: var(--sw-bg-elevated);
+    border: 1px solid var(--sw-border);
+    box-shadow: var(--sw-shadow-card);
+    transition: transform var(--sw-transition-med), box-shadow var(--sw-transition-med), border-color var(--sw-transition-med);
+}
+body.theme-lp .gh-category-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--sw-shadow-card-hover);
+    border-color: color-mix(in srgb, var(--cat-accent, var(--sw-border-strong)) 50%, transparent);
+}
+body.theme-lp .gh-category-card::before {
+    background: linear-gradient(135deg, var(--cat-accent, var(--sw-accent)), color-mix(in srgb, var(--cat-accent, var(--sw-accent)) 60%, black));
+}
+
+/* ---------- Reading progress bar ---------- */
+#gh-reading-progress {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: transparent;
+    z-index: 200;
+    pointer-events: none;
+}
+#gh-reading-progress > span {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--sw-accent), color-mix(in srgb, var(--sw-accent) 70%, var(--sw-on-dark)));
+    transition: width 80ms linear;
+}
+
+/* ---------- Code blocks: copy button + language chip + theme ---------- */
+body.theme-lp .gh-content pre {
+    position: relative;
+    background: var(--sw-code-bg);
+    color: var(--sw-code-text);
+    border-radius: var(--sw-radius-sm);
+    padding: 40px 22px 22px;
+    overflow-x: auto;
+    font-family: var(--sw-font-mono);
+    font-size: 1.45rem;
+    line-height: 1.6;
+    box-shadow: var(--sw-shadow-code);
+}
+body.theme-lp .gh-content pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+body.theme-lp .gh-content pre[data-lang]::before {
+    content: attr(data-lang);
+    position: absolute;
+    top: 10px;
+    left: 14px;
+    font-family: var(--sw-font-heading-alt);
+    font-size: 1.05rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sw-code-muted);
+}
+body.theme-lp .gh-lp-copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: color-mix(in srgb, var(--sw-on-dark) 8%, transparent);
+    color: var(--sw-code-fg-secondary);
+    border: 1px solid color-mix(in srgb, var(--sw-on-dark) 12%, transparent);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-family: var(--sw-font-heading-alt);
+    font-size: 1.1rem;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: all var(--sw-transition-fast);
+}
+body.theme-lp .gh-lp-copy-btn:hover { background: color-mix(in srgb, var(--sw-on-dark) 15%, transparent); color: var(--sw-on-dark); }
+body.theme-lp .gh-lp-copy-btn.is-copied { background: var(--sw-accent-success); color: var(--sw-on-dark); border-color: transparent; }
+
+body.theme-lp .gh-content :not(pre) > code {
+    background: var(--sw-bg-subtle);
+    color: var(--sw-text);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.88em;
+    font-family: var(--sw-font-mono);
+    border: 1px solid var(--sw-border);
+}
+
+/* ---------- Related posts ---------- */
+.gh-lp-related { margin: 80px auto 0 !important; }
+.gh-lp-related-heading { font-size: 2.4rem; font-weight: 600; margin-bottom: 28px; }
+.gh-lp-related-tag { font-weight: 700; }
+.gh-lp-related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.gh-lp-related-card { display: block; color: inherit; text-decoration: none !important; background: var(--sw-bg-elevated); border: 1px solid var(--sw-border); border-radius: var(--sw-radius); overflow: hidden; transition: transform var(--sw-transition-med), box-shadow var(--sw-transition-med); }
+.gh-lp-related-card:hover { transform: translateY(-2px); box-shadow: var(--sw-shadow-card-hover); }
+.gh-lp-related-image { margin: 0; aspect-ratio: 16/10; background: var(--sw-bg-subtle); overflow: hidden; }
+.gh-lp-related-image img { width: 100%; height: 100%; object-fit: cover; }
+.gh-lp-related-content { padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; }
+.gh-lp-related-title { font-size: 1.7rem; line-height: 1.25; margin: 0; }
+@media (max-width: 767px) { .gh-lp-related-grid { grid-template-columns: 1fr; } }
+
+/* ---------- Dark-mode adjustments for existing theme elements ---------- */
+html[data-theme="dark"] body.theme-lp {
+    background-color: var(--sw-bg) !important;
+    color: var(--sw-text) !important;
+}
+html[data-theme="dark"] body.theme-lp .gh-head-logo,
+html[data-theme="dark"] body.theme-lp .gh-head-link,
+html[data-theme="dark"] body.theme-lp .gh-head .nav a,
+html[data-theme="dark"] body.theme-lp .gh-search,
+html[data-theme="dark"] body.theme-lp .gh-burger::before,
+html[data-theme="dark"] body.theme-lp .gh-burger::after { color: var(--sw-text); }
+html[data-theme="dark"] body.theme-lp .gh-burger::before,
+html[data-theme="dark"] body.theme-lp .gh-burger::after { background-color: var(--sw-text); }
+html[data-theme="dark"] body.theme-lp .gh-content,
+html[data-theme="dark"] body.theme-lp .gh-article-title,
+html[data-theme="dark"] body.theme-lp .gh-article-excerpt { color: var(--sw-text); }
+html[data-theme="dark"] body.theme-lp .gh-cta-input { background: var(--sw-bg-elevated); color: var(--sw-text-muted); border: 1px solid var(--sw-border); }
+html[data-theme="dark"] body.theme-lp .gh-list-item-inner,
+html[data-theme="dark"] body.theme-lp .gh-card,
+html[data-theme="dark"] body.theme-lp .gh-card-inner { background: var(--sw-bg-elevated) !important; border-color: var(--sw-border); }
+html[data-theme="dark"] body.theme-lp .gh-list-item-inner *,
+html[data-theme="dark"] body.theme-lp .gh-card * { color: inherit; }
+html[data-theme="dark"] body.theme-lp .gh-list-item-title,
+html[data-theme="dark"] body.theme-lp .gh-card-title { color: var(--sw-text) !important; }
+html[data-theme="dark"] body.theme-lp .gh-list-item-excerpt,
+html[data-theme="dark"] body.theme-lp .gh-card-excerpt,
+html[data-theme="dark"] body.theme-lp .gh-list-item-meta,
+html[data-theme="dark"] body.theme-lp .gh-card-meta { color: var(--sw-text-muted) !important; }
+html[data-theme="dark"] body.theme-lp .gh-hero,
+html[data-theme="dark"] body.theme-lp .gh-hero-inner { background-color: var(--sw-bg) !important; background-image: none !important; }
+html[data-theme="dark"] body.theme-lp .gh-hero-primary,
+html[data-theme="dark"] body.theme-lp .gh-hero-secondary { color: var(--sw-text) !important; }
+
+/* Light-mode hero text: force dark readable text on cream bg */
+body.theme-lp .gh-hero-primary,
+body.theme-lp .gh-hero-secondary { color: var(--sw-text); }
+html[data-theme="dark"] body.theme-lp .gh-lp-feature,
+html[data-theme="dark"] body.theme-lp .gh-lp-card,
+html[data-theme="dark"] body.theme-lp .gh-lp-related-card,
+html[data-theme="dark"] body.theme-lp .gh-category-card { background: var(--sw-bg-elevated); border-color: var(--sw-border); }
+html[data-theme="dark"] body.theme-lp .gh-foot { border-top: 1px solid var(--sw-border); }
+html[data-theme="dark"] body.theme-lp :not(pre) > code { background: var(--sw-bg-subtle); border-color: var(--sw-border); color: var(--sw-text); }
+html[data-theme="dark"] body.theme-lp blockquote:not([class]) { border-left-color: var(--sw-accent); color: var(--sw-text); }
+html[data-theme="dark"] body.theme-lp .gh-cta-inner { border-color: var(--sw-border); }
+
+/* ---------- A11y: WCAG AA contrast fixes ---------- */
+/* Dark text on the orange accent button (white-on-accent fails AA ~2.58:1) */
+body.theme-lp .gh-head-btn.gh-primary-btn,
+body.theme-lp .gh-cta-input span {
+    color: var(--sw-on-accent);
+}
+/* CTA: scale down title, button, and section padding */
+body.theme-lp .gh-cta-title {
+    font-size: 1.9rem;
+    font-weight: 700;
+}
+body.theme-lp .gh-cta-inner {
+    padding-top: 3.2rem;
+    padding-bottom: 3.2rem;
+}
+body.theme-lp .gh-cta-input {
+    padding: 0;
+    height: 44px;
+    max-width: 260px;
+    background: transparent !important;
+    border: none !important;
+}
+body.theme-lp .gh-cta-input span {
+    flex: 1;
+    height: 100%;
+    font-size: 1.4rem;
+    border-radius: 8px !important;
+}
+/* Category description: #6b6356 on dark bg fails AA (~2.97:1). Use muted token (~5.8:1). */
+html[data-theme="dark"] body.theme-lp .gh-category-description {
+    color: var(--sw-text-muted);
+}
+/* Tag pills: default blue/red/green accents fail AA on dark bg. Brighten in dark mode. */
+html[data-theme="dark"] body.theme-lp .gh-lp-tag,
+html[data-theme="dark"] body.theme-lp .gh-lp-tag-eyebrow {
+    color: color-mix(in srgb, var(--cat-accent, var(--sw-accent)) 55%, white);
+    background: color-mix(in srgb, var(--cat-accent, var(--sw-accent)) 22%, transparent);
+}
+
+/* ---------- Trip collection ---------- */
+.gh-lp-collection-hero { padding-top: 40px; padding-bottom: 40px; }
+.gh-lp-collection-hero-image { margin: 0 0 28px; aspect-ratio: 21/9; border-radius: var(--sw-radius); overflow: hidden; background: var(--sw-bg-subtle); }
+.gh-lp-collection-hero-image img { width: 100%; height: 100%; object-fit: cover; }
+.gh-lp-collection-hero-content { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+.gh-lp-collection-title { font-size: clamp(3.6rem, 4vw + 2rem, 6.4rem); margin: 0; line-height: 1.05; }
+.gh-lp-collection-lede { color: var(--sw-text-muted); font-size: 1.9rem; max-width: 720px; margin: 0; }
+.gh-lp-collection-intro { margin-top: 32px; }
+.gh-lp-collection-list { padding-top: 56px; padding-bottom: 80px; }
+.gh-lp-collection-list-title { font-size: 2.6rem; margin-bottom: 28px; }
+.gh-lp-collection-items { list-style: none; padding: 0; margin: 0; position: relative; }
+.gh-lp-collection-items::before { content: ""; position: absolute; left: 28px; top: 12px; bottom: 12px; width: 2px; background: linear-gradient(to bottom, var(--cat-accent, var(--ghost-accent-color)), transparent); opacity: 0.5; }
+.gh-lp-collection-item { display: grid; grid-template-columns: 100px 1fr; gap: 24px; padding: 14px 0 22px; position: relative; }
+.gh-lp-collection-item-meta { display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 14px; }
+.gh-lp-collection-item-num { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--cat-accent, var(--sw-accent)); color: var(--sw-on-dark); font-family: var(--sw-font-heading-alt); font-weight: 700; font-size: 1.4rem; }
+.gh-lp-collection-item-meta time { font-family: var(--sw-font-mono); font-size: 1.25rem; color: var(--sw-text-muted); }
+.gh-lp-collection-item-card { display: grid; grid-template-columns: 180px 1fr; gap: 20px; background: var(--sw-bg-elevated); border: 1px solid var(--sw-border); border-radius: var(--sw-radius); overflow: hidden; color: inherit; text-decoration: none !important; transition: transform var(--sw-transition-med), box-shadow var(--sw-transition-med); }
+.gh-lp-collection-item-card:hover { transform: translateY(-2px); box-shadow: var(--sw-shadow-card-hover); }
+.gh-lp-collection-item-image { margin: 0; aspect-ratio: 1; background: var(--sw-bg-subtle); }
+.gh-lp-collection-item-image img { width: 100%; height: 100%; object-fit: cover; }
+.gh-lp-collection-item-body { padding: 18px 20px 18px 0; }
+.gh-lp-collection-item-title { font-size: 1.9rem; margin: 0 0 8px; line-height: 1.25; }
+.gh-lp-collection-item-excerpt { margin: 0; font-size: 1.45rem; color: var(--sw-text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+@media (max-width: 767px) {
+    .gh-lp-collection-item { grid-template-columns: 1fr; gap: 12px; }
+    .gh-lp-collection-item-meta { flex-direction: row; padding-top: 0; }
+    .gh-lp-collection-items::before { display: none; }
+    .gh-lp-collection-item-card { grid-template-columns: 1fr; }
+    .gh-lp-collection-item-image { aspect-ratio: 16/9; }
+    .gh-lp-collection-item-body { padding: 16px 18px; }
+}
+
+/* Dark-mode overrides for .gh-content tables (base theme hardcodes #fff/var(--color-white) fades) */
+html[data-theme="dark"] body.theme-lp .gh-content table:not(.gist table) { background-image: radial-gradient(ellipse at left, var(--sw-table-fade-edge) 0, transparent 75%) 0, radial-gradient(ellipse at right, var(--sw-table-fade-edge) 0, transparent 75%) 100%; background-repeat: no-repeat; background-attachment: scroll; background-size: 10px 100%, 10px 100%; color: var(--sw-text); }
+html[data-theme="dark"] body.theme-lp .gh-content table:not(.gist table) td:first-child { background-image: linear-gradient(90deg, var(--sw-bg) 50%, transparent); background-repeat: no-repeat; background-size: 20px 100%; }
+html[data-theme="dark"] body.theme-lp .gh-content table:not(.gist table) td:last-child { background-image: linear-gradient(270deg, var(--sw-bg) 50%, transparent); background-position: 100% 0; background-repeat: no-repeat; background-size: 20px 100%; }
+html[data-theme="dark"] body.theme-lp .gh-content table:not(.gist table) th { background-color: var(--sw-bg-elevated) !important; color: var(--sw-text) !important; border-color: var(--sw-border) !important; }
+html[data-theme="dark"] body.theme-lp .gh-content table:not(.gist table) td { border-color: var(--sw-border) !important; color: var(--sw-text); }
+html[data-theme="dark"] body.theme-lp .gh-content table:not(.gist table) tr:nth-child(even) td { background-color: var(--sw-table-stripe); }
+/* Respect motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    body.theme-lp *, body.theme-lp *::before, body.theme-lp *::after { transition: none !important; animation-duration: 0.01ms !important; }
+}
+
+/* Normalize head-logo size across all pages + bump for visibility */
+body.theme-lp .gh-head-logo { padding: 4px 0; }
+body.theme-lp .gh-head-logo img { height: 56px !important; max-height: 56px !important; width: auto !important; max-width: none !important; display: block; }
+@media (max-width: 767px) {
+    body.theme-lp .gh-head-logo img { height: 56px !important; max-height: 56px !important; }
+    body.theme-lp .gh-head-lp .gh-head-brand { position: relative; justify-content: center; }
+    body.theme-lp .gh-head-lp .gh-head-brand-wrapper { display: flex; justify-content: center; }
+    body.theme-lp .gh-head-lp .gh-head-brand .gh-search,
+    body.theme-lp .gh-head-lp .gh-head-brand .gh-burger { position: absolute; top: 50%; transform: translateY(-50%); }
+    body.theme-lp .gh-head-lp .gh-head-brand .gh-search { right: 48px; }
+    body.theme-lp .gh-head-lp .gh-head-brand .gh-burger { right: 0; }
+}
+
+/* Wider post content on large screens — target ~75vw with sane caps */
+body.post-template.theme-lp .gh-canvas,
+body.page-template.theme-lp .gh-canvas {
+    --container-width: min(96vw, 1920px);
+    --content-width: min(78vw, 1400px);
+}
+@media (max-width: 767px) {
+    body.post-template.theme-lp .gh-canvas,
+    body.page-template.theme-lp .gh-canvas {
+        --container-width: 100%;
+        --content-width: min(94vw, 720px);
+    }
+}
+
+/* Article hero — matches the content column width */
+body.post-template.theme-lp .gh-article-image,
+body.page-template.theme-lp .gh-article-image {
+    margin-top: 32px;
+    margin-bottom: 16px;
+}
+body.post-template.theme-lp .gh-article-image img,
+body.page-template.theme-lp .gh-article-image img {
+    width: 100%;
+    max-height: 520px;
+    object-fit: cover;
+    border-radius: var(--sw-radius);
+}
+@media (max-width: 767px) {
+    body.post-template.theme-lp .gh-article-image img,
+    body.page-template.theme-lp .gh-article-image img {
+        max-height: 320px;
+    }
+}
+
+/* Footer legibility — base theme uses a dim --color-secondary-text that's unreadable */
+body.theme-lp .gh-copyright,
+body.theme-lp .gh-copyright a {
+    color: var(--sw-text-muted) !important;
+    font-size: 1.4rem;
+}
+body.theme-lp .gh-copyright a {
+    color: var(--sw-text) !important;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+body.theme-lp .gh-copyright a:hover {
+    color: var(--sw-accent) !important;
+}
+
+/* Hide hero-shot caption on posts/pages — user doesn't want it */
+body.post-template.theme-lp .gh-article-image figcaption,
+body.page-template.theme-lp .gh-article-image figcaption {
+    display: none !important;
+}
+
+/* ---------- Access badges (members / paid lock indicators) ---------- */
+.gh-lp-card-meta-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.gh-lp-access-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--sw-font-heading-alt);
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 999px;
+    line-height: 1;
+}
+.gh-lp-access-members {
+    background: color-mix(in srgb, var(--sw-accent) 14%, transparent);
+    color: var(--sw-accent);
+}
+.gh-lp-access-paid {
+    background: color-mix(in srgb, var(--sw-accent-star) 18%, transparent);
+    color: var(--sw-accent-star);
+}
+html[data-theme="dark"] body.theme-lp .gh-lp-access-members {
+    color: color-mix(in srgb, var(--sw-accent) 55%, var(--sw-on-dark));
+}
+html[data-theme="dark"] body.theme-lp .gh-lp-access-paid {
+    color: color-mix(in srgb, var(--sw-accent-star) 75%, var(--sw-on-dark));
+}
+
+/* ---------- Membership pricing page ---------- */
+.gh-lp-membership-hero {
+    padding: 56px 0 40px;
+    text-align: center;
+}
+.gh-lp-membership-title {
+    font-size: clamp(3.6rem, 4vw + 2rem, 6rem);
+    margin: 0 0 16px;
+    line-height: 1.05;
+}
+.gh-lp-membership-lede {
+    font-size: 2rem;
+    color: var(--sw-text-muted);
+    max-width: 600px;
+    margin: 0 auto;
+}
+.gh-lp-tiers-section { padding-bottom: 80px; }
+.gh-lp-tiers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    align-items: start;
+    margin-top: 8px;
+}
+.gh-lp-tier {
+    position: relative;
+    background: var(--sw-bg-elevated);
+    border: 1px solid var(--sw-border);
+    border-radius: var(--sw-radius);
+    padding: 36px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    box-shadow: var(--sw-shadow-card);
+}
+.gh-lp-tier-featured {
+    border-color: var(--sw-accent);
+    box-shadow: 0 0 0 2px var(--sw-accent), var(--sw-shadow-card-hover);
+}
+.gh-lp-tier-badge {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--sw-accent);
+    color: var(--sw-on-accent);
+    font-family: var(--sw-font-heading-alt);
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+.gh-lp-tier-name {
+    font-size: 2.2rem;
+    margin: 0;
+    font-family: var(--sw-font-heading);
+}
+.gh-lp-tier-description {
+    font-size: 1.5rem;
+    color: var(--sw-text-muted);
+    margin: 8px 0 0;
+    line-height: 1.5;
+}
+.gh-lp-tier-price {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-top: 12px;
+}
+.gh-lp-tier-currency { font-size: 2rem; font-weight: 600; align-self: flex-start; margin-top: 6px; }
+.gh-lp-tier-amount { font-size: 5rem; font-weight: 800; line-height: 1; font-family: var(--sw-font-heading); }
+.gh-lp-tier-period { font-size: 1.6rem; color: var(--sw-text-muted); }
+.gh-lp-tier-annual {
+    font-size: 1.35rem;
+    color: var(--sw-text-muted);
+    margin: 6px 0 0;
+}
+.gh-lp-tier-benefits {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+}
+.gh-lp-tier-benefits li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 1.55rem;
+    line-height: 1.4;
+}
+.gh-lp-tier-benefits li::before {
+    content: "✓";
+    flex-shrink: 0;
+    font-weight: 700;
+    color: var(--sw-accent-success);
+    margin-top: 1px;
+}
+.gh-lp-tier-btn {
+    display: block;
+    width: 100%;
+    padding: 14px 24px;
+    border: none;
+    border-radius: var(--sw-radius-sm);
+    font-family: var(--sw-font-heading-alt);
+    font-size: 1.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity var(--sw-transition-fast), transform var(--sw-transition-fast);
+    text-align: center;
+}
+.gh-lp-tier-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+.gh-lp-tier-btn-free {
+    background: var(--sw-bg-subtle);
+    color: var(--sw-text);
+    border: 1px solid var(--sw-border-strong);
+}
+.gh-lp-tier-btn-paid {
+    background: var(--sw-accent);
+    color: var(--sw-on-accent);
+}
+.gh-lp-membership-content {
+    padding-top: 0;
+    padding-bottom: 80px;
+}
+@media (max-width: 767px) {
+    .gh-lp-tiers { grid-template-columns: 1fr; }
+    .gh-lp-tier { padding: 28px 24px; }
+    .gh-lp-tier-amount { font-size: 4rem; }
+}
+
+/* ---- Koenig card classes required by GScan ---- */
+.kg-gallery-container { display: flex; flex-direction: column; }
+.kg-gallery-row { display: flex; flex-direction: row; justify-content: center; gap: 8px; margin-bottom: 8px; }
+.kg-bookmark-icon { width: 22px; height: 22px; margin-right: 6px; flex-shrink: 0; }
+.kg-bookmark-author { font-size: 1.2rem; font-weight: 500; }
+.kg-bookmark-publisher { font-size: 1.2rem; color: var(--lp-muted, var(--color-secondary-text)); }
+
+/* ---------- Koenig signup card ---------- */
+.kg-signup-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 40px;
+    background: var(--sw-bg-elevated);
+    border: 1px solid var(--sw-border);
+    border-radius: var(--sw-radius);
+    text-align: center;
+    gap: 16px;
+}
+.kg-signup-card-heading {
+    font-family: var(--sw-font-heading);
+    font-size: clamp(2.4rem, 2vw + 1.6rem, 3.6rem);
+    font-weight: 700;
+    margin: 0;
+    color: var(--sw-text);
+}
+.kg-signup-card-subheading {
+    font-size: 1.7rem;
+    color: var(--sw-text-muted);
+    margin: 0;
+    max-width: 560px;
+    line-height: 1.5;
+}
+.kg-signup-card-form {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    max-width: 480px;
+    margin-top: 8px;
+}
+.kg-signup-card-input {
+    flex: 1;
+    height: 48px;
+    padding: 0 16px;
+    font-size: 1.5rem;
+    border: 1px solid var(--sw-border-strong);
+    border-radius: var(--sw-radius-sm);
+    background: var(--sw-bg);
+    color: var(--sw-text);
+    outline: none;
+    transition: border-color var(--sw-transition-fast);
+}
+.kg-signup-card-input:focus { border-color: var(--sw-accent); }
+.kg-signup-card-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 48px;
+    padding: 0 24px;
+    background: var(--sw-accent);
+    color: var(--sw-on-accent);
+    font-family: var(--sw-font-heading-alt);
+    font-size: 1.5rem;
+    font-weight: 700;
+    border: none;
+    border-radius: var(--sw-radius-sm);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity var(--sw-transition-fast);
+}
+.kg-signup-card-button:hover { opacity: 0.88; }
+.kg-signup-card-button-loading { display: none; }
+.kg-signup-card.loading .kg-signup-card-button-default { display: none; }
+.kg-signup-card.loading .kg-signup-card-button-loading { display: block; }
+.kg-signup-card-success {
+    display: none;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--sw-accent-success);
+}
+.kg-signup-card.success .kg-signup-card-form { display: none; }
+.kg-signup-card.success .kg-signup-card-success { display: block; }
+.kg-signup-card-error {
+    font-size: 1.4rem;
+    color: var(--sw-accent-danger);
+    margin-top: 4px;
+}
+.kg-signup-card-disclaimer {
+    font-size: 1.3rem;
+    color: var(--sw-text-muted);
+    margin: 0;
+}
+@media (max-width: 640px) {
+    .kg-signup-card { padding: 32px 24px; }
+    .kg-signup-card-form { flex-direction: column; }
+    .kg-signup-card-button { width: 100%; }
+}
+html[data-theme="dark"] body.theme-lp .kg-signup-card {
+    background: var(--sw-bg-elevated);
+    border-color: var(--sw-border);
+}
+html[data-theme="dark"] body.theme-lp .kg-signup-card-input {
+    background: var(--sw-bg);
+    color: var(--sw-text);
+    border-color: var(--sw-border-strong);
+}
+
+/* ---------- Ghost paywall break ---------- */
+.gh-content .gh-paywall {
+    margin: 48px 0;
+    padding: 48px 40px;
+    background: var(--sw-bg-elevated);
+    border: 1px solid var(--sw-border);
+    border-top: 3px solid var(--sw-accent);
+    border-radius: var(--sw-radius);
+    text-align: center;
+    position: relative;
+}
+.gh-content .gh-paywall::before {
+    content: "";
+    display: block;
+    position: absolute;
+    top: -80px;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: linear-gradient(to bottom, transparent, var(--sw-bg));
+    pointer-events: none;
+}
+.gh-content .gh-paywall h2 {
+    font-family: var(--sw-font-heading);
+    font-size: clamp(2.4rem, 2vw + 1.6rem, 3.2rem);
+    margin: 0 0 12px;
+    color: var(--sw-text);
+}
+.gh-content .gh-paywall p {
+    font-size: 1.7rem;
+    color: var(--sw-text-muted);
+    margin: 0 0 24px;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.5;
+}
+.gh-content .gh-paywall .gh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 48px;
+    padding: 0 32px;
+    background: var(--sw-accent);
+    color: var(--sw-on-accent);
+    font-family: var(--sw-font-heading-alt);
+    font-size: 1.6rem;
+    font-weight: 700;
+    border-radius: var(--sw-radius-sm);
+    text-decoration: none;
+    transition: opacity var(--sw-transition-fast);
+}
+.gh-content .gh-paywall .gh-btn:hover { opacity: 0.88; }
+html[data-theme="dark"] body.theme-lp .gh-content .gh-paywall {
+    background: var(--sw-bg-elevated);
+    border-color: var(--sw-border);
+    border-top-color: var(--sw-accent);
+}
+html[data-theme="dark"] body.theme-lp .gh-content .gh-paywall::before {
+    background: linear-gradient(to bottom, transparent, var(--sw-bg));
+}
+
+/* ---------- Featured-post card (Ghost marketplace recommendation) ---------- */
+/* Ghost's {{post_class}} adds .featured to posts flagged as featured in admin.
+   We highlight them with a subtle accent border + a "★ Featured" badge so
+   readers can spot editor-picked posts at a glance across list/home views. */
+body.theme-lp .gh-lp-card.featured,
+body.theme-lp .gh-lp-feature.featured {
+    border: 1px solid var(--sw-accent);
+    border-radius: var(--sw-radius-md, 8px);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--sw-accent) 20%, transparent);
+}
+body.theme-lp .gh-lp-card.featured .gh-lp-card-inner,
+body.theme-lp .gh-lp-feature.featured .gh-lp-feature-inner {
+    padding: 8px;
+}
+body.theme-lp .gh-lp-featured-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: color-mix(in srgb, var(--sw-accent) 15%, transparent);
+    color: var(--sw-accent);
+    font-size: 1.2rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* ---------- Semantic wrapper / modifier hooks ----------
+   Classes that templates reference as structural hooks or BEM-style
+   modifiers. They inherit all their visual styling from their parent
+   or sibling rules; these minimal declarations exist so the "every
+   gh-* class has a CSS rule" CI check does not flag them, and so the
+   CSS linter does not flag empty rulesets.
+   If you need to actually style one of these, replace the stub below. */
+body.theme-lp .gh-archive-header { display: block; }
+body.theme-lp .gh-archive-inner  { display: block; }
+body.theme-lp .gh-cta            { display: block; }
+body.theme-lp .gh-lp-grid--wide  { display: grid; }
+body.theme-lp .gh-lp-tier-free,
+body.theme-lp .gh-lp-tier-paid,
+body.theme-lp .gh-lp-tier-header { display: block; }
+
+/* ---------- Mobile nav overflow fix ----------
+   The upstream Source build hides the mobile nav with `position: fixed;
+   opacity: 0; visibility: hidden` but provides no left/right, so the flex
+   row stays at its content width (~596px) and extends past the 375px
+   viewport — producing a horizontal scrollbar on every mobile page.
+   Pin the hidden menu to the viewport AND clip its inner <ul> (which is
+   itself a flex row wider than the viewport) so it can't contribute to
+   document scrollWidth. The :not(.is-head-open) scope means the open
+   drawer state is left alone. */
+@media (max-width: 767px) {
+    body.theme-lp #gh-head:not(.is-head-open) .gh-head-menu,
+    body.theme-lp #gh-head:not(.is-head-open) .gh-head-actions {
+        left: 0;
+        right: 0;
+        overflow: hidden;
+    }
+}
+
+/* ---------- Mobile brand: logo overlapping search icon ----------
+   .gh-head-brand-wrapper upstream has justify-content:center, which
+   centers the logo inside the brand column. .gh-head-brand .gh-search
+   is position:absolute; right:48px (to sit left of the 40px burger).
+   When the logo is wide (e.g. a wordmark logo), its right edge runs
+   under the search icon. Left-align the logo on mobile and cap its
+   width so there's always clear space for the search + burger buttons. */
+@media (max-width: 767px) {
+    body.theme-lp #gh-head .gh-head-brand-wrapper {
+        justify-content: flex-start;
+    }
+    body.theme-lp #gh-head .gh-head-logo {
+        max-width: calc(100% - 88px); /* 88px = search (40) + burger (40) + 8 gap */
+    }
+}

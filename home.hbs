@@ -1,0 +1,139 @@
+{{!--
+    home.hbs — Homepage template.
+    Renders the hero section, optional category strip, and a mixed-size post grid
+    (first post featured full-width, remaining posts in a 3-column card grid).
+    Custom settings used: primary_header, secondary_header, show_category_strip,
+    email_signup_text, navigation_layout.
+--}}
+{{!< default}}
+
+<main class="gh-main">
+    <section class="gh-hero gh-outer">
+        <div class="gh-hero-inner gh-inner">
+            {{#if @site.logo}}
+                <img class="gh-hero-logo" src="{{img_url @site.logo size="xl"}}" alt="{{@site.title}}">
+            {{/if}}
+            {{#if @custom.primary_header}}
+                <h1 class="gh-hero-primary">{{@custom.primary_header}}</h1>
+            {{else if @site.description}}
+                <h1 class="gh-hero-primary">{{@site.description}}</h1>
+            {{/if}}
+            {{#if @custom.secondary_header}}
+                <p class="gh-hero-secondary">{{@custom.secondary_header}}</p>
+            {{/if}}
+        </div>
+    </section>
+
+    {{#if @custom.show_category_strip}}
+        {{> "category-strip"}}
+    {{/if}}
+
+    <section class="gh-archive gh-outer">
+        <div class="gh-archive-inner gh-inner">
+            <header class="gh-archive-header">
+                <h1 class="gh-archive-title">{{t "Latest posts"}}</h1>
+            </header>
+        </div>
+    </section>
+
+    {{!-- Mixed-size grid: first post featured full-width, remaining posts in a 3-column grid --}}
+    <div class="gh-lp-mixed-grid gh-outer">
+        <div class="gh-inner">
+            {{#get "posts" include="tags,authors" limit="7" order="published_at desc"}}
+                {{#foreach posts}}
+                    {{#if @first}}
+                        <article class="gh-lp-feature {{post_class}}">
+                            <a class="gh-lp-feature-inner" href="{{url}}">
+                                {{#if feature_image}}
+                                    <figure class="gh-lp-feature-image">
+                                        <img
+                                            srcset="{{img_url feature_image size="m"}} 720w,
+                                                    {{img_url feature_image size="l"}} 960w,
+                                                    {{img_url feature_image size="xl"}} 1200w,
+                                                    {{img_url feature_image size="xxl"}} 2000w"
+                                            sizes="(max-width: 1200px) 100vw, 1200px"
+                                            src="{{img_url feature_image size="xl"}}"
+                                            alt="{{#if feature_image_alt}}{{feature_image_alt}}{{else}}{{title}}{{/if}}"
+                                            loading="eager"
+                                        >
+                                    </figure>
+                                {{/if}}
+                                <div class="gh-lp-feature-content">
+                                    <div class="gh-lp-card-meta-row">
+                                        {{#if featured}}
+                                            <span class="gh-lp-featured-badge" aria-label="Featured post">★ Featured</span>
+                                        {{/if}}
+                                        {{#if primary_tag.name}}
+                                            <span class="gh-lp-tag" {{#if primary_tag.accent_color}}style="--cat-accent: {{primary_tag.accent_color}};"{{/if}}>{{primary_tag.name}}</span>
+                                        {{/if}}
+                                        {{> "components/access-badge"}}
+                                    </div>
+                                    <h2 class="gh-lp-feature-title">{{title}}</h2>
+                                    {{#if excerpt}}
+                                        <p class="gh-lp-feature-excerpt">{{excerpt}}</p>
+                                    {{/if}}
+                                    <div class="gh-lp-meta">
+                                        <time datetime="{{date format="YYYY-MM-DD"}}">{{date format="DD MMM YYYY"}}</time>
+                                        <span class="gh-lp-dot">·</span>
+                                        <span>{{reading_time minute=(t "1 min read") minutes=(t "% min read")}}</span>
+                                    </div>
+                                </div>
+                            </a>
+                        </article>
+                    {{else}}
+                        {{#if @index}}
+                            {{#match @index "==" 1}}<div class="gh-lp-grid">{{/match}}
+                        {{/if}}
+                        <article class="gh-lp-card {{post_class}}">
+                            <a class="gh-lp-card-inner" href="{{url}}">
+                                {{#if feature_image}}
+                                    <figure class="gh-lp-card-image">
+                                        <img
+                                            srcset="{{img_url feature_image size="s"}} 300w,
+                                                    {{img_url feature_image size="m"}} 720w,
+                                                    {{img_url feature_image size="l"}} 960w"
+                                            sizes="(max-width: 767px) 100vw, 400px"
+                                            src="{{img_url feature_image size="m"}}"
+                                            alt="{{#if feature_image_alt}}{{feature_image_alt}}{{else}}{{title}}{{/if}}"
+                                            loading="lazy"
+                                        >
+                                    </figure>
+                                {{/if}}
+                                <div class="gh-lp-card-content">
+                                    <div class="gh-lp-card-meta-row">
+                                        {{#if featured}}
+                                            <span class="gh-lp-featured-badge" aria-label="Featured post">★ Featured</span>
+                                        {{/if}}
+                                        {{#if primary_tag.name}}
+                                            <span class="gh-lp-tag" {{#if primary_tag.accent_color}}style="--cat-accent: {{primary_tag.accent_color}};"{{/if}}>{{primary_tag.name}}</span>
+                                        {{/if}}
+                                        {{> "components/access-badge"}}
+                                    </div>
+                                    <h3 class="gh-lp-card-title">{{title}}</h3>
+                                    {{#if excerpt}}
+                                        <p class="gh-lp-card-excerpt">{{excerpt}}</p>
+                                    {{/if}}
+                                    <div class="gh-lp-meta">
+                                        <time datetime="{{date format="YYYY-MM-DD"}}">{{date format="DD MMM YYYY"}}</time>
+                                        <span class="gh-lp-dot">·</span>
+                                        <span>{{reading_time minute=(t "1 min read") minutes=(t "% min read")}}</span>
+                                    </div>
+                                </div>
+                            </a>
+                        </article>
+                        {{#if @last}}</div>{{/if}}
+                    {{/if}}
+                {{/foreach}}
+            {{/get}}
+        </div>
+    </div>
+
+    {{#match pagination.pages ">" 1}}
+        <div class="gh-more gh-outer">
+            <div class="gh-inner">
+                <a href="/page/2">{{t "More posts →"}}</a>
+            </div>
+        </div>
+    {{/match}}
+    {{> "components/cta" title=@custom.email_signup_text}}
+</main>

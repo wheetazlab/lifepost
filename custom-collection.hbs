@@ -1,0 +1,81 @@
+{{!< default}}
+{{!--
+    custom-collection.hbs — Generic collection page template.
+
+    Use this to group any set of posts under a single landing page.
+
+    Setup:
+    1. Create a Ghost Page (e.g. "Panama 2024", "Favourite Recipes", "Reading List").
+    2. In the page settings sidebar, select "Collection" from the Template dropdown.
+    3. Create a tag whose slug matches what you want to collect (e.g. "panama-2024").
+    4. Set that tag as the page's primary tag.
+    5. Tag each post you want in the collection with that same tag.
+
+    The template renders:
+    - A hero with the page's feature image, title, and excerpt
+    - The page body as an optional introduction
+    - A numbered, chronological list of all posts sharing the primary tag
+
+    The label pill and accent colour are driven by the primary tag's name and
+    accent colour — set these in Ghost Admin → Tags.
+--}}
+
+{{#post}}
+<main class="gh-main">
+    <section class="gh-lp-collection-hero gh-outer">
+        <div class="gh-inner">
+            {{#if feature_image}}
+                <figure class="gh-lp-collection-hero-image">
+                    <img src="{{img_url feature_image size="xxl"}}" alt="{{title}}">
+                </figure>
+            {{/if}}
+            <div class="gh-lp-collection-hero-content">
+                {{#if primary_tag}}
+                    <span class="gh-lp-tag" {{#if primary_tag.accent_color}}style="--cat-accent: {{primary_tag.accent_color}};"{{/if}}>{{primary_tag.name}}</span>
+                {{/if}}
+                <h1 class="gh-lp-collection-title">{{title}}</h1>
+                {{#if custom_excerpt}}<p class="gh-lp-collection-lede">{{custom_excerpt}}</p>{{/if}}
+            </div>
+        </div>
+    </section>
+
+    {{#if html}}
+        <section class="gh-content gh-canvas gh-lp-collection-intro">
+            {{content}}
+        </section>
+    {{/if}}
+
+    {{#if primary_tag.slug}}
+        {{#get "posts" filter="tags:[{{primary_tag.slug}}]" order="published_at asc" limit="50" include="tags"}}
+            {{#if posts.length}}
+                <section class="gh-lp-collection-list gh-outer">
+                    <div class="gh-inner">
+                        <h2 class="gh-lp-collection-list-title">{{../primary_tag.name}}</h2>
+                        <ol class="gh-lp-collection-items">
+                            {{#foreach posts}}
+                                <li class="gh-lp-collection-item">
+                                    <div class="gh-lp-collection-item-meta">
+                                        <span class="gh-lp-collection-item-num">{{@number}}</span>
+                                        <time datetime="{{date format="YYYY-MM-DD"}}">{{date format="DD MMM"}}</time>
+                                    </div>
+                                    <a class="gh-lp-collection-item-card" href="{{url}}">
+                                        {{#if feature_image}}
+                                            <figure class="gh-lp-collection-item-image">
+                                                <img src="{{img_url feature_image size="m"}}" alt="{{title}}" loading="lazy">
+                                            </figure>
+                                        {{/if}}
+                                        <div class="gh-lp-collection-item-body">
+                                            <h3 class="gh-lp-collection-item-title">{{title}}</h3>
+                                            {{#if excerpt}}<p class="gh-lp-collection-item-excerpt">{{excerpt}}</p>{{/if}}
+                                        </div>
+                                    </a>
+                                </li>
+                            {{/foreach}}
+                        </ol>
+                    </div>
+                </section>
+            {{/if}}
+        {{/get}}
+    {{/if}}
+</main>
+{{/post}}

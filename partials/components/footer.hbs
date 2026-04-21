@@ -1,0 +1,21 @@
+{{!--
+    Site footer — secondary navigation and copyright line.
+    Parameters:
+    * footerText (text) — overrides the default "Site © Year. Powered by Ghost" line
+--}}
+
+<footer class="gh-foot gh-outer">
+    <div class="gh-foot-inner gh-inner">
+        <nav class="gh-foot-menu">
+            {{navigation type="secondary"}}
+        </nav>
+
+        <div class="gh-copyright">
+            {{#unless footerText}}
+                {{@site.title}} &copy; {{date format="YYYY"}}. {{{t "Powered by {ghostlink}" ghostlink="<a href=\"https://ghost.org/\" target=\"_blank\" rel=\"noopener\">Ghost</a>"}}}
+            {{else}}
+                {{footerText}}
+            {{/unless}}
+        </div>
+    </div>
+</footer>

@@ -1,0 +1,30 @@
+{{!-- Related posts: pulls up to 3 posts sharing the primary tag --}}
+{{#if primary_tag}}
+    {{#get "posts" filter="tags:[{{primary_tag.slug}}]+id:-{{comment_id}}" limit="3" include="tags"}}
+        {{#if posts.length}}
+            <section class="gh-lp-related gh-canvas">
+                <h2 class="gh-lp-related-heading"{{#if primary_tag.accent_color}} style="color: {{primary_tag.accent_color}};"{{/if}}>{{t "More from {tag}" tag=primary_tag.name}}</h2>
+                <div class="gh-lp-related-grid">
+                    {{#foreach posts}}
+                        <a class="gh-lp-related-card" href="{{url}}">
+                            {{#if feature_image}}
+                                <figure class="gh-lp-related-image">
+                                    <img src="{{img_url feature_image size="m"}}" alt="{{title}}" loading="lazy">
+                                </figure>
+                            {{/if}}
+                            <div class="gh-lp-related-content">
+                                {{> "components/access-badge"}}
+                                <h3 class="gh-lp-related-title">{{title}}</h3>
+                                <div class="gh-lp-meta">
+                                    <time datetime="{{date format="YYYY-MM-DD"}}">{{date format="DD MMM YYYY"}}</time>
+                                    <span class="gh-lp-dot">·</span>
+                                    <span>{{reading_time minute=(t "1 min read") minutes=(t "% min read")}}</span>
+                                </div>
+                            </div>
+                        </a>
+                    {{/foreach}}
+                </div>
+            </section>
+        {{/if}}
+    {{/get}}
+{{/if}}

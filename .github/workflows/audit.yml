@@ -1,0 +1,163 @@
+name: Live Audit
+
+on:
+  workflow_dispatch:
+
+# Opt JS-based actions into Node.js 24 to clear the Node 20 deprecation notice.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  lighthouse:
+    name: Lighthouse (SEO + Accessibility)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Audit with Lighthouse
+        run: |
+          npx --yes lighthouse@latest "https://lifepost.swheetlife.com" \
+            --output=json,html \
+            --output-path=./lh-report \
+            --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+            --only-categories=accessibility,seo,best-practices
+
+          node -e "
+          const r = require('./lh-report.report.json');
+          const a11y = r.categories.accessibility.score;
+          const seo  = r.categories.seo.score;
+          const bp   = r.categories['best-practices'].score;
+          console.log('Accessibility: ' + Math.round(a11y * 100) + '%');
+          console.log('SEO: ' + Math.round(seo * 100) + '%');
+          console.log('Best practices: ' + Math.round(bp * 100) + '%');
+          const failures = [];
+          if (a11y < 0.9) failures.push('Accessibility ' + Math.round(a11y * 100) + '%');
+          if (seo  < 0.9) failures.push('SEO ' + Math.round(seo * 100) + '%');
+          if (failures.length) { console.error('FAILED: ' + failures.join(', ')); process.exit(1); }
+          console.log('All scores passed.');
+          "
+
+      - name: Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: lh-report.report.html
+
+  pa11y:
+    name: Pa11y (WCAG2AA)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write pa11y config
+        run: |
+          cat > pa11y-config.json <<'EOF'
+          {
+            "standard": "WCAG2AA",
+            "chromeLaunchConfig": {
+              "args": ["--no-sandbox", "--disable-dev-shm-usage"]
+            },
+            "hideElements": "[href^=\"#/portal/\"]"
+          }
+          EOF
+
+      - name: Run pa11y audit
+        run: |
+          npx --yes pa11y \
+            --config pa11y-config.json \
+            --level error \
+            --reporter cli \
+            "https://lifepost.swheetlife.com"
+
+      - name: Save pa11y JSON report
+        if: always()
+        run: |
+          npx pa11y \
+            --config pa11y-config.json \
+            --reporter json \
+            "https://lifepost.swheetlife.com" > pa11y-report.json || true
+
+      - name: Upload Pa11y report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pa11y-report
+          path: pa11y-report.json
+
+  ssl-frame:
+    name: SSL + Ghost iframe embed
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check TLS certificate validity
+        run: |
+          set -e
+          echo | openssl s_client -servername lifepost.swheetlife.com \
+            -connect lifepost.swheetlife.com:443 2>/dev/null \
+            | openssl x509 -noout -subject -issuer -dates
+          curl -sSfI https://lifepost.swheetlife.com > /dev/null
+          echo "TLS OK"
+
+      - name: Check site is embeddable in *.ghost.org iframes
+        run: |
+          set -e
+          headers=$(curl -sI https://lifepost.swheetlife.com)
+          echo "$headers"
+          xfo=$(echo "$headers" | grep -i '^x-frame-options:' || true)
+          csp=$(echo "$headers" | grep -i '^content-security-policy:' || true)
+          if [ -n "$xfo" ] && echo "$xfo" | grep -qiE 'deny|sameorigin'; then
+            echo "::error::X-Frame-Options blocks ghost.org iframe embed: $xfo"
+            exit 1
+          fi
+          if [ -n "$csp" ] && echo "$csp" | grep -qi 'frame-ancestors'; then
+            fa=$(echo "$csp" | grep -oiE 'frame-ancestors[^;]*')
+            if ! echo "$fa" | grep -qiE "\*|ghost\.org"; then
+              echo "::error::CSP frame-ancestors blocks ghost.org: $fa"
+              exit 1
+            fi
+          fi
+          echo "iframe embed OK"
+
+  browser-matrix:
+    name: Responsive (${{ matrix.browser }} / ${{ matrix.viewport }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+        viewport: [mobile, desktop]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+      - name: Install Playwright
+        run: |
+          npm i --no-save @playwright/test@latest
+          npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Audit ${{ matrix.browser }} @ ${{ matrix.viewport }}
+        env:
+          SITE_URL: https://lifepost.swheetlife.com
+          BROWSER: ${{ matrix.browser }}
+          VIEWPORT: ${{ matrix.viewport }}
+        run: node .github/scripts/audit-browser.js
+
+  kitchen-sink:
+    name: Ghost editor content types (optional)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip if KITCHEN_SINK_URL is not set
+        id: guard
+        run: |
+          if [ -z "${{ vars.KITCHEN_SINK_URL }}" ]; then
+            echo "::warning::Set repository variable KITCHEN_SINK_URL to a post URL that uses every Ghost card type to enable this check."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Scan kitchen-sink post with pa11y
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          cat > pa11y-config.json <<'EOF'
+          {
+            "standard": "WCAG2AA",
+            "chromeLaunchConfig": { "args": ["--no-sandbox", "--disable-dev-shm-usage"] },
+            "hideElements": "[href^=\"#/portal/\"]"
+          }
+          EOF
+          npx --yes pa11y --config pa11y-config.json --level error \
+            --reporter cli "${{ vars.KITCHEN_SINK_URL }}"
